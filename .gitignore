@@ -1,0 +1,74 @@
+# Unity gitignore
+
+# Generated files
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+
+# Visual Studio cache directory
+.vs/
+
+# MonoDevelop/Xamarin
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+*.sln.meta
+*.suo.meta
+*.userprefs.meta
+
+# Unity generated files
+*.unity.meta
+*.prefab.meta
+*.scene.meta
+*.asset.meta
+
+# Build artifacts
+*.exe
+*.dll
+*.manifest
+*.app
+*.apk
+*.aab
+*.ipa
+*.xapk
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Unity specific
+*.unityproj
+*.cbo
+*.idb
+*.ncb
+*.opt
+*.sdf
+*.suo
+*.user
+*.VC.db
+*.VC.VC.db
+*.opensdf
+*.sdf
+*.cache
+*.ipch
+*.tlog
+*.lastbuildstate
+
+# Plugin specific
+*[Aa]ssets/[Pp]ackages/
+*[Pp]ackages/[Ss]tyleCop/
+
+# Custom - Map Loader
+# Uncomment if you want to exclude map data
+# Assets/Map/*/buildings/*.glb
+# Assets/Map/*/terrain.glb
