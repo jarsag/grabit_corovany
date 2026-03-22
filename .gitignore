@@ -72,3 +72,9 @@ desktop.ini
 # Uncomment if you want to exclude map data
 # Assets/Map/*/buildings/*.glb
 # Assets/Map/*/terrain.glb
+
+# Allow specific asset files
+!Assets/*.inputactions
+!Assets/*.inputactions.meta
+!Assets/Readme.asset
+!Assets/Readme.asset.meta
