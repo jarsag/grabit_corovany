@@ -6,6 +6,13 @@ using Newtonsoft.Json;
 namespace MapLoader
 {
     [Serializable]
+    public class SpawnPoint
+    {
+        public int tile_x;
+        public int tile_y;
+    }
+
+    [Serializable]
     public class Manifest
     {
         public string alpha_atlas;
@@ -18,6 +25,7 @@ namespace MapLoader
         public int map_height_tiles;
         public int map_width_tiles;
         public string map_name;
+        public SpawnPoint spawn_point;
     }
 
     [Serializable]

@@ -17,6 +17,16 @@ namespace MapLoader
         [Tooltip("Путь к папке с картой (относительно Assets)")]
         public string mapFolderPath = "Map/PKmap";
 
+        [Header("Настройки спавна игрока")]
+        [Tooltip("Префаб игрока для спавна")]
+        public GameObject playerPrefab;
+
+        [Tooltip("Спавнить игрока в точке spawn_point из manifest.json")]
+        public bool spawnPlayerAtSpawnPoint = true;
+
+        [Tooltip("Смещение позиции игрока относительно точки спавна")]
+        public Vector3 playerSpawnOffset = Vector3.zero;
+
         [Header("Настройки спавна")]
         [Tooltip("Использовать спавн-поинты из terrain.glb (вместо placements из манифеста)")]
         public bool useTerrainSpawnPoints = true;
@@ -49,6 +59,7 @@ namespace MapLoader
         public Manifest manifest;
         public Transform objectsParent;
         public Transform terrainParent;
+        public GameObject spawnedPlayer;
 
         private Dictionary<int, string> buildingPaths = new();
         private List<Transform> allSpawnPoints = new();
@@ -124,6 +135,12 @@ namespace MapLoader
             else
             {
                 SpawnPlacements();
+            }
+
+            // Спавн игрока
+            if (spawnPlayerAtSpawnPoint)
+            {
+                SpawnPlayer();
             }
 
             Debug.Log($"Загрузка карты '{manifest.map_name}' завершена!");
@@ -534,6 +551,19 @@ namespace MapLoader
                 objectsParent = null;
             }
 
+            if (spawnedPlayer != null)
+            {
+                if (Application.isEditor)
+                {
+                    DestroyImmediate(spawnedPlayer);
+                }
+                else
+                {
+                    Destroy(spawnedPlayer);
+                }
+                spawnedPlayer = null;
+            }
+
             buildingPaths.Clear();
             allSpawnPoints.Clear();
             placementsByObjId.Clear();
@@ -541,6 +571,53 @@ namespace MapLoader
             manifest = null;
 
             Debug.Log("Карта очищена");
+        }
+
+        /// <summary>
+        /// Спавн игрока в точке spawn_point из manifest.json
+        /// </summary>
+        private void SpawnPlayer()
+        {
+            if (playerPrefab == null)
+            {
+                Debug.LogWarning("playerPrefab не назначен, игрок не будет заспавнен");
+                return;
+            }
+
+            if (manifest.spawn_point == null)
+            {
+                Debug.LogWarning("spawn_point не найден в manifest.json, игрок не будет заспавнен");
+                return;
+            }
+
+            if (terrainParent == null)
+            {
+                Debug.LogWarning("Террейн не загружен, невозможно определить высоту для спавна игрока");
+                return;
+            }
+
+            int tileX = manifest.spawn_point.tile_x;
+            int tileY = manifest.spawn_point.tile_y;
+
+            float worldX = tileX + 0.5f;
+            float worldZ = tileY + 0.5f;
+
+            Ray ray = new Ray(new Vector3(worldX, 1000, worldZ), Vector3.down);
+            
+            if (Physics.Raycast(ray, out RaycastHit hit, 2000f))
+            {
+                Vector3 spawnPosition = hit.point + playerSpawnOffset;
+                spawnedPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
+                
+                Debug.Log($"Игрок заспавнен в tile=({tileX}, {tileY}), world=({spawnPosition.x:F2}, {spawnPosition.y:F2}, {spawnPosition.z:F2})");
+            }
+            else
+            {
+                Vector3 spawnPosition = new Vector3(worldX, 0, worldZ) + playerSpawnOffset;
+                spawnedPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
+                
+                Debug.LogWarning($"Raycast не попал в землю, игрок заспавнен на высоте 0: ({spawnPosition.x:F2}, {spawnPosition.y:F2}, {spawnPosition.z:F2})");
+            }
         }
     }
 }
