@@ -10,21 +10,21 @@ public class PlayerMovement : MonoBehaviour
     [Header("Настройки движения")]
     [Tooltip("Скорость перемещения игрока")]
     public float moveSpeed = 5f;
-    
+
     [Tooltip("Минимальная дистанция до цели, чтобы считать её достигнутой")]
     public float stopDistance = 0.1f;
 
     [Header("Настройки поверхности")]
     [Tooltip("Слой земли для raycast")]
     public LayerMask groundLayer = -1;
-    
+
     [Tooltip("Максимальная дистанция raycast")]
     public float raycastDistance = 100f;
 
     [Header("Визуализация")]
     [Tooltip("Префаб маркера точки назначения")]
     public GameObject destinationMarker;
-    
+
     [Tooltip("Смещение маркера над поверхностью")]
     public float markerOffset = 0.1f;
 
@@ -33,29 +33,17 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 targetPosition;
     private bool hasTarget = false;
     private GameObject currentMarker;
-    private bool isFollowingMouse = false;
+    private bool wasLeftPressedLastFrame = false;
 
     void Start()
     {
         characterController = GetComponent<CharacterController>();
         mainCamera = Camera.main;
         targetPosition = transform.position;
-        
+
         if (groundLayer == -1)
         {
             groundLayer = LayerMask.GetMask("Default");
-        }
-        
-        Debug.Log($"PlayerMovement Start: camera={mainCamera != null}, controller={characterController != null}, layer={groundLayer}");
-        
-        // Проверка Input System
-        if (Mouse.current != null)
-        {
-            Debug.Log("Input System: Mouse доступен");
-        }
-        else
-        {
-            Debug.LogWarning("Input System: Mouse НЕ доступен! Проверь Input System package.");
         }
     }
 
@@ -80,45 +68,38 @@ public class PlayerMovement : MonoBehaviour
         {
             mousePos = Mouse.current.position.ReadValue();
             leftPressed = Mouse.current.leftButton.isPressed;
-            
+
             // Определяем отпускание кнопки
             if (!leftPressed && wasLeftPressedLastFrame)
             {
                 leftReleased = true;
             }
         }
-        
+
         wasLeftPressedLastFrame = leftPressed;
 
         // Если ЛКМ зажата - следуем за курсором (без маркеров)
         if (leftPressed)
         {
-            isFollowingMouse = true;
             Ray ray = mainCamera.ScreenPointToRay(mousePos);
-            
+
             if (Physics.Raycast(ray, out RaycastHit hit, raycastDistance, groundLayer))
             {
                 SetDestination(hit.point);
             }
-        }
-        else
-        {
-            isFollowingMouse = false;
         }
 
         // При отпускании - ставим маркер и идём в точку
         if (leftReleased)
         {
             Ray ray = mainCamera.ScreenPointToRay(mousePos);
-            
+
             if (Physics.Raycast(ray, out RaycastHit hit, raycastDistance, groundLayer))
             {
                 SetDestinationWithMarker(hit.point);
             }
         }
     }
-
-    private bool wasLeftPressedLastFrame = false;
 
     void SetDestination(Vector3 position)
     {
@@ -165,8 +146,6 @@ public class PlayerMovement : MonoBehaviour
             Quaternion targetRotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
         }
-        
-        Debug.Log($"Движение: dir={direction}, speed={moveSpeed}, pos={transform.position}");
     }
 
     void RemoveMarker()

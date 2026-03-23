@@ -86,7 +86,9 @@ public class PlayerCameraSetup : EditorWindow
             isoCamera = cameraObj.AddComponent<IsometricCamera>();
         }
 
-        isoCamera.offset = new Vector3(0, 10, -8);
+        isoCamera.distance = 12f;
+        isoCamera.heightAngle = 35f;
+        isoCamera.rotateSpeed = 5f;
         isoCamera.followSpeed = 5f;
         isoCamera.smoothFollow = true;
 
