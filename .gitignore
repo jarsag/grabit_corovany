@@ -78,3 +78,14 @@ desktop.ini
 !Assets/*.inputactions.meta
 !Assets/Readme.asset
 !Assets/Readme.asset.meta
+
+# Ignore auto-generated .meta files in root Assets folders
+Assets/Map.meta
+Assets/Prefabs.meta
+Assets/Scenes.meta
+Assets/Scripts.meta
+Assets/Settings.meta
+Assets/TutorialInfo.meta
+
+# Packages lock file (regenerated on each machine)
+Packages/packages-lock.json
