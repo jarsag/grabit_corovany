@@ -17,6 +17,12 @@ public class IsometricCamera : MonoBehaviour
     [Tooltip("Высота камеры (угол обзора)")]
     [Range(0f, 90f)]
     public float heightAngle = 35f;
+    
+    [Tooltip("Минимальная дистанция зума")]
+    public float minDistance = 5f;
+    
+    [Tooltip("Максимальная дистанция зума")]
+    public float maxDistance = 20f;
 
     [Header("Вращение")]
     [Tooltip("Скорость вращения камеры")]
@@ -73,6 +79,17 @@ public class IsometricCamera : MonoBehaviour
             
             // Ограничиваем вертикальный угол
             verticalAngle = Mathf.Clamp(verticalAngle, minVerticalAngle, maxVerticalAngle);
+        }
+
+        // Зум колёсиком мыши
+        if (Mouse.current != null)
+        {
+            float scroll = Mouse.current.scroll.ReadValue().y;
+            if (scroll != 0)
+            {
+                distance -= scroll * 0.5f;
+                distance = Mathf.Clamp(distance, minDistance, maxDistance);
+            }
         }
 
         // Вычисляем позицию камеры из углов

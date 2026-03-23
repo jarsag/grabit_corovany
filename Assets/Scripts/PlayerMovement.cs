@@ -14,6 +14,9 @@ public class PlayerMovement : MonoBehaviour
     [Tooltip("Минимальная дистанция до цели, чтобы считать её достигнутой")]
     public float stopDistance = 0.3f;
 
+    [Tooltip("Время через которое цель сбрасывается если игрок застрял")]
+    public float stuckTimeout = 1.5f;
+
     [Header("Настройки поверхности")]
     [Tooltip("Слой земли для raycast")]
     public LayerMask groundLayer = -1;
@@ -35,12 +38,17 @@ public class PlayerMovement : MonoBehaviour
     private GameObject currentMarker;
     private bool wasLeftPressedLastFrame = false;
     private float lastMoveSpeed = 0f;
+    
+    // Для детекции застревания
+    private Vector3 lastPosition;
+    private float stuckTimer = 0f;
 
     void Start()
     {
         characterController = GetComponent<CharacterController>();
         mainCamera = Camera.main;
         targetPosition = transform.position;
+        lastPosition = transform.position;
 
         if (groundLayer == -1)
         {
@@ -131,7 +139,12 @@ public class PlayerMovement : MonoBehaviour
 
     void MoveToTarget()
     {
-        if (!hasTarget) return;
+        if (!hasTarget)
+        {
+            lastPosition = transform.position;
+            stuckTimer = 0f;
+            return;
+        }
 
         Vector3 direction = targetPosition - transform.position;
 
@@ -148,6 +161,7 @@ public class PlayerMovement : MonoBehaviour
             
             // Явно сбрасываем "скорость" для анимации
             lastMoveSpeed = 0f;
+            stuckTimer = 0f;
             
             return;
         }
@@ -177,6 +191,26 @@ public class PlayerMovement : MonoBehaviour
 
         move.y = verticalMove;
         characterController.Move(move);
+
+        // Детекция застревания
+        float movedDistance = Vector3.Distance(transform.position, lastPosition);
+        if (movedDistance < 0.01f)
+        {
+            stuckTimer += Time.deltaTime;
+            if (stuckTimer >= stuckTimeout)
+            {
+                Debug.Log("Игрок застрял! Сброс цели.");
+                hasTarget = false;
+                RemoveMarker();
+                lastMoveSpeed = 0f;
+                stuckTimer = 0f;
+            }
+        }
+        else
+        {
+            stuckTimer = 0f;
+        }
+        lastPosition = transform.position;
 
         if (horizontalDirection != Vector3.zero)
         {
