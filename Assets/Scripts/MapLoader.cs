@@ -21,8 +21,11 @@ namespace MapLoader
         [Tooltip("Префаб игрока для спавна")]
         public GameObject playerPrefab;
 
-        [Tooltip("Спавнить игрока в точке spawn_point из manifest.json")]
+        [Tooltip("Спавнить игрока в точке spawn_point из террейна (building_*)")]
         public bool spawnPlayerAtSpawnPoint = true;
+
+        [Tooltip("ID спавн-поинта для игрока (например, 0 = building_0). -1 = первый доступный")]
+        public int playerSpawnPointId = -1;
 
         [Tooltip("Смещение позиции игрока относительно точки спавна")]
         public Vector3 playerSpawnOffset = Vector3.zero;
@@ -203,10 +206,40 @@ namespace MapLoader
             terrainModel.transform.localRotation = Quaternion.identity;
             terrainModel.transform.localScale = Vector3.one;
 
+            // Добавляем Mesh Collider для raycast
+            AddMeshCollider(terrainModel);
+
             // Находим спавн-поинты
             FindSpawnPoints(terrainModel);
 
             Debug.Log($"Террейн загружен из GLB, найдено спавн-поинтов: {allSpawnPoints.Count}");
+        }
+
+        /// <summary>
+        /// Добавляет Mesh Collider на модель террейна
+        /// </summary>
+        private void AddMeshCollider(GameObject terrainModel)
+        {
+            // Ищем все меши в модели
+            MeshFilter[] meshFilters = terrainModel.GetComponentsInChildren<MeshFilter>(true);
+            
+            int collidersAdded = 0;
+            foreach (MeshFilter mf in meshFilters)
+            {
+                if (mf.sharedMesh != null)
+                {
+                    MeshCollider collider = mf.gameObject.GetComponent<MeshCollider>();
+                    if (collider == null)
+                    {
+                        collider = mf.gameObject.AddComponent<MeshCollider>();
+                        collider.sharedMesh = mf.sharedMesh;
+                        collider.convex = false;
+                        collidersAdded++;
+                    }
+                }
+            }
+            
+            Debug.Log($"Добавлено Mesh Collider'ов: {collidersAdded}");
         }
 
         /// <summary>
@@ -574,7 +607,7 @@ namespace MapLoader
         }
 
         /// <summary>
-        /// Спавн игрока в точке spawn_point из manifest.json
+        /// Спавн игрока в точке спавна из террейна (building_*)
         /// </summary>
         private void SpawnPlayer()
         {
@@ -584,40 +617,49 @@ namespace MapLoader
                 return;
             }
 
-            if (manifest.spawn_point == null)
+            if (allSpawnPoints.Count == 0)
             {
-                Debug.LogWarning("spawn_point не найден в manifest.json, игрок не будет заспавнен");
+                Debug.LogWarning("Спавн-поинты не найдены в террейне, игрок не будет заспавнен");
                 return;
             }
 
-            if (terrainParent == null)
+            // Находим спавн-поинт для игрока
+            Transform spawnPoint = null;
+
+            if (playerSpawnPointId >= 0)
             {
-                Debug.LogWarning("Террейн не загружен, невозможно определить высоту для спавна игрока");
-                return;
-            }
+                // Ищем по конкретному ID
+                string targetName = $"{spawnPointPrefix}{playerSpawnPointId}";
+                foreach (Transform sp in allSpawnPoints)
+                {
+                    if (sp.name == targetName)
+                    {
+                        spawnPoint = sp;
+                        break;
+                    }
+                }
 
-            int tileX = manifest.spawn_point.tile_x;
-            int tileY = manifest.spawn_point.tile_y;
-
-            float worldX = tileX + 0.5f;
-            float worldZ = tileY + 0.5f;
-
-            Ray ray = new Ray(new Vector3(worldX, 1000, worldZ), Vector3.down);
-            
-            if (Physics.Raycast(ray, out RaycastHit hit, 2000f))
-            {
-                Vector3 spawnPosition = hit.point + playerSpawnOffset;
-                spawnedPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
-                
-                Debug.Log($"Игрок заспавнен в tile=({tileX}, {tileY}), world=({spawnPosition.x:F2}, {spawnPosition.y:F2}, {spawnPosition.z:F2})");
+                if (spawnPoint == null)
+                {
+                    Debug.LogWarning($"Спавн-поинт {targetName} не найден, используем первый доступный");
+                    spawnPoint = allSpawnPoints[0];
+                }
             }
             else
             {
-                Vector3 spawnPosition = new Vector3(worldX, 0, worldZ) + playerSpawnOffset;
-                spawnedPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
-                
-                Debug.LogWarning($"Raycast не попал в землю, игрок заспавнен на высоте 0: ({spawnPosition.x:F2}, {spawnPosition.y:F2}, {spawnPosition.z:F2})");
+                // Используем первый доступный
+                spawnPoint = allSpawnPoints[0];
             }
+
+            Debug.Log($"Спавн игрока в точке: {spawnPoint.name} ({spawnPoint.position})");
+
+            Vector3 spawnPosition = spawnPoint.position + playerSpawnOffset;
+            spawnedPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
+            
+            Debug.Log($"✓ Игрок заспавнен: {spawnPosition}");
+
+            // Визуализация точки спавна
+            Debug.DrawRay(spawnPoint.position, Vector3.up * 2f, Color.green, 5f);
         }
     }
 }
