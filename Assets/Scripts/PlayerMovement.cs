@@ -57,6 +57,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (mainCamera == null)
         {
+            Debug.LogWarning("Camera.main = null!");
             return;
         }
 
@@ -78,6 +79,8 @@ public class PlayerMovement : MonoBehaviour
 
         wasLeftPressedLastFrame = leftPressed;
 
+        Debug.Log($"ЛКМ: pressed={leftPressed}, released={leftReleased}");
+
         // Если ЛКМ зажата - следуем за курсором (без маркеров)
         if (leftPressed)
         {
@@ -85,7 +88,12 @@ public class PlayerMovement : MonoBehaviour
 
             if (Physics.Raycast(ray, out RaycastHit hit, raycastDistance, groundLayer))
             {
+                Debug.Log($"Raycast попал в {hit.point}");
                 SetDestination(hit.point);
+            }
+            else
+            {
+                Debug.LogWarning($"Raycast не попал! Layer={groundLayer}, distance={raycastDistance}");
             }
         }
 
@@ -96,6 +104,7 @@ public class PlayerMovement : MonoBehaviour
 
             if (Physics.Raycast(ray, out RaycastHit hit, raycastDistance, groundLayer))
             {
+                Debug.Log($"Raycast попал (отпускание) в {hit.point}");
                 SetDestinationWithMarker(hit.point);
             }
         }

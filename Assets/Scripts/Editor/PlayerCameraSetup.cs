@@ -37,12 +37,21 @@ public class PlayerCameraSetup : EditorWindow
             CreatePlayerAndCamera();
         }
 
+        GUILayout.Space(10);
+        EditorGUILayout.HelpBox("После загрузки карты:", MessageType.Info);
+        
+        if (GUILayout.Button("Поставить игрока на точку спавна", GUILayout.Height(35)))
+        {
+            PlacePlayerOnSpawnPoint();
+        }
+
         GUILayout.Space(20);
         GUILayout.Label("Инструкция:", EditorStyles.boldLabel);
         GUILayout.Label("1. Создайте землю (Plane или Terrain)");
         GUILayout.Label("2. Нажмите 'Создать всё вместе'");
-        GUILayout.Label("3. Запустите сцену");
-        GUILayout.Label("4. ПКМ для перемещения игрока");
+        GUILayout.Label("3. Загрузите карту через Map Loader");
+        GUILayout.Label("4. Нажмите 'Поставить игрока на точку спавна'");
+        GUILayout.Label("5. ПКМ для перемещения игрока");
     }
 
     void CreatePlayer()
@@ -148,15 +157,108 @@ public class PlayerCameraSetup : EditorWindow
                 marker.name = "DestinationMarker";
                 marker.transform.localScale = Vector3.one * 0.3f;
                 marker.AddComponent<DestinationMarker>();
-                
+
                 string path = "Assets/Prefabs/DestinationMarker.prefab";
                 System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path));
                 PrefabUtility.SaveAsPrefabAsset(marker, path);
-                
+
                 playerMovement.destinationMarker = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             }
         }
 
         Debug.Log("Игрок и камера созданы и связаны!");
+    }
+
+    void PlacePlayerOnSpawnPoint()
+    {
+        // Находим игрока на сцене
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player == null)
+        {
+            Debug.LogWarning("Игрок не найден! Создай игрока сначала.");
+            return;
+        }
+
+        // Ищем террейн по имени
+        Transform terrainParent = null;
+        Transform[] allTransforms = FindObjectsByType<Transform>(FindObjectsSortMode.InstanceID);
+        
+        foreach (Transform t in allTransforms)
+        {
+            if (t.name.Contains("_Terrain") || t.name.Contains("terrain") || t.name.Contains("PKmap"))
+            {
+                terrainParent = t;
+                Debug.Log($"Найден террейн: {t.name}");
+                break;
+            }
+        }
+
+        if (terrainParent == null)
+        {
+            Debug.LogWarning("Террейн не найден! Загрузи карту через Map Loader.");
+            return;
+        }
+
+        // Ищем SpawnPoint в иерархии: PKmap_terrain -> map_root -> SpawnPoint
+        Transform spawnPoint = FindSpawnPoint(terrainParent);
+
+        if (spawnPoint == null)
+        {
+            Debug.LogWarning("SpawnPoint не найден в иерархии террейна!");
+            return;
+        }
+
+        // Перемещаем игрока на точку спавна
+        Undo.RecordObject(player.transform, "Move Player to Spawn Point");
+        player.transform.position = spawnPoint.position;
+        
+        Debug.Log($"✓ Игрок перемещён на SpawnPoint: {spawnPoint.position}");
+    }
+
+    Transform FindSpawnPoint(Transform terrainRoot)
+    {
+        // Ищем map_root
+        Transform mapRoot = null;
+        foreach (Transform child in terrainRoot)
+        {
+            if (child.name.Contains("map_root") || child.name.Contains("maproot"))
+            {
+                mapRoot = child;
+                Debug.Log($"Найден map_root: {child.name}");
+                break;
+            }
+        }
+
+        // Если не нашли map_root, ищем SpawnPoint напрямую
+        Transform spawnPoint = null;
+        Transform searchRoot = mapRoot != null ? mapRoot : terrainRoot;
+
+        // Ищем SpawnPoint в детях
+        foreach (Transform child in searchRoot)
+        {
+            if (child.name.Contains("SpawnPoint") || child.name.Contains("spawn"))
+            {
+                spawnPoint = child;
+                Debug.Log($"Найден SpawnPoint: {child.name}");
+                break;
+            }
+        }
+
+        // Если не нашли, ищем во всех дочерних объектах
+        if (spawnPoint == null)
+        {
+            Transform[] allChildren = searchRoot.GetComponentsInChildren<Transform>(true);
+            foreach (Transform t in allChildren)
+            {
+                if (t.name.Contains("SpawnPoint") || t.name.Contains("spawn"))
+                {
+                    spawnPoint = t;
+                    Debug.Log($"Найден SpawnPoint (в дочерних): {t.name}");
+                    break;
+                }
+            }
+        }
+
+        return spawnPoint;
     }
 }

@@ -29,11 +29,14 @@ public class PlayerAnimation : MonoBehaviour
     {
         if (animator == null || characterController == null) return;
 
+        // Пропускаем, если нет контроллера
+        if (animator.runtimeAnimatorController == null) return;
+
         // Вычисляем скорость движения
         float speed = characterController.velocity.magnitude;
-        
-        // Устанавливаем параметры анимации
-        animator.SetFloat(SpeedHash, speed);
-        animator.SetBool(IsMovingHash, speed > 0.1f);
+
+        // Устанавливаем параметры анимации (закомментировано для теста)
+        // animator.SetFloat(SpeedHash, speed);
+        // animator.SetBool(IsMovingHash, speed > 0.1f);
     }
 }
