@@ -25,6 +25,7 @@
 *.prefab.meta
 *.scene.meta
 *.asset.meta
+*.unity
 
 # Build artifacts
 *.exe
