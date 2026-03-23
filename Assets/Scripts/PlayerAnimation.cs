@@ -2,26 +2,32 @@ using UnityEngine;
 
 /// <summary>
 /// Управление анимациями игрока
-/// Автоматически находит Animator и управляет параметрами
+/// Ищет Animator на модели (дочернем объекте)
 /// </summary>
-[RequireComponent(typeof(Animator))]
+[RequireComponent(typeof(CharacterController))]
 public class PlayerAnimation : MonoBehaviour
 {
     private Animator animator;
     private CharacterController characterController;
-    
-    // Хэш параметров для производительности
-    private static readonly int SpeedHash = Animator.StringToHash("Speed");
-    private static readonly int IsMovingHash = Animator.StringToHash("IsMoving");
 
     void Start()
     {
-        animator = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
-        
+
+        // Ищем Animator на себе или на дочерних объектах (модели)
+        animator = GetComponent<Animator>();
         if (animator == null)
         {
-            Debug.LogWarning("Animator не найден на игроке!");
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        if (animator == null)
+        {
+            Debug.LogWarning("Animator не найден на игроке или модели!");
+        }
+        else
+        {
+            Debug.Log($"✓ Animator найден: {animator.gameObject.name}");
         }
     }
 
@@ -32,11 +38,24 @@ public class PlayerAnimation : MonoBehaviour
         // Пропускаем, если нет контроллера
         if (animator.runtimeAnimatorController == null) return;
 
-        // Вычисляем скорость движения
-        float speed = characterController.velocity.magnitude;
+        // Получаем скорость из PlayerMovement (точнее чем CharacterController.velocity)
+        PlayerMovement playerMovement = GetComponent<PlayerMovement>();
+        float speed = 0f;
+        
+        if (playerMovement != null)
+        {
+            if (playerMovement.HasTarget())
+            {
+                speed = playerMovement.GetMoveSpeed();
+            }
+            else
+            {
+                speed = 0f;
+            }
+        }
 
-        // Устанавливаем параметры анимации (закомментировано для теста)
-        // animator.SetFloat(SpeedHash, speed);
-        // animator.SetBool(IsMovingHash, speed > 0.1f);
+        // Устанавливаем параметры анимации
+        animator.SetFloat("Speed", speed);
+        animator.SetBool("IsMoving", speed > 0.1f);
     }
 }
