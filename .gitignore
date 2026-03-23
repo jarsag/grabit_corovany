@@ -69,9 +69,9 @@ desktop.ini
 *[Pp]ackages/[Ss]tyleCop/
 
 # Custom - Map Loader
-# Uncomment if you want to exclude map data
-# Assets/Map/*/buildings/*.glb
-# Assets/Map/*/terrain.glb
+# Exclude map data (GLB files are too large)
+Assets/Map/**/*.glb
+Assets/Map/**/*.glb.meta
 
 # Allow specific asset files
 !Assets/*.inputactions
