@@ -47,24 +47,47 @@ public class PlayerCameraSetup : EditorWindow
 
     void CreatePlayer()
     {
-        GameObject player = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        player.name = "Player";
+        // Создаём пустой объект для игрока
+        GameObject player = new GameObject("Player");
         player.transform.position = new Vector3(0, 1, 0);
         
-        var controller = player.GetComponent<CharacterController>();
-        if (controller == null)
-        {
-            controller = player.AddComponent<CharacterController>();
-            controller.height = 2;
-            controller.radius = 0.5f;
-        }
-
-        if (player.GetComponent<PlayerMovement>() == null)
-        {
-            player.AddComponent<PlayerMovement>();
-        }
-
+        // Добавляем CharacterController
+        var controller = player.AddComponent<CharacterController>();
+        controller.height = 2;
+        controller.radius = 0.5f;
+        
+        // Добавляем скрипты
+        player.AddComponent<PlayerMovement>();
+        player.AddComponent<PlayerAnimation>();
+        
+        // Устанавливаем тег
         player.tag = "Player";
+        
+        // Загружаем модель 4.gltf как дочерний объект
+        string modelPath = "Assets/4.gltf";
+        if (System.IO.File.Exists(modelPath))
+        {
+            Debug.Log($"Загрузка модели игрока из {modelPath}...");
+            // Модель загрузится автоматически через GLTFUtility при запуске
+            // В редакторе просто создадим placeholder
+            GameObject model = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            model.name = "Model";
+            model.transform.SetParent(player.transform);
+            model.transform.localPosition = Vector3.zero;
+            model.transform.localScale = Vector3.one;
+            DestroyImmediate(model.GetComponent<CapsuleCollider>());
+        }
+        else
+        {
+            // Если модели нет, создаём цилиндр как placeholder
+            GameObject placeholder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            placeholder.name = "Model";
+            placeholder.transform.SetParent(player.transform);
+            placeholder.transform.localPosition = Vector3.zero;
+            placeholder.transform.localScale = Vector3.one * 0.5f;
+            DestroyImmediate(placeholder.GetComponent<CapsuleCollider>());
+        }
+        
         Selection.activeGameObject = player;
         Debug.Log("Игрок создан!");
     }
