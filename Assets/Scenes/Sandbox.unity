@@ -648,6 +648,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41a769db679d46d4188ae0dfe213d96a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimation
+  debugHotkeys: 1
 --- !u!114 &1969115468
 MonoBehaviour:
   m_ObjectHideFlags: 0
