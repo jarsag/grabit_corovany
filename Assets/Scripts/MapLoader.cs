@@ -17,6 +17,9 @@ namespace MapLoader
         [Tooltip("Путь к папке с картой (относительно Assets)")]
         public string mapFolderPath = "Map/PKmap";
 
+        [Tooltip("Загружать карту автоматически при старте (Play). Для лёгкой сцены без запечённой карты")]
+        public bool loadOnStart = false;
+
         [Header("Настройки спавна игрока")]
         [Tooltip("Префаб игрока для спавна")]
         public GameObject playerPrefab;
@@ -69,6 +72,14 @@ namespace MapLoader
         private Dictionary<int, List<Placement>> placementsByObjId = new();
         private HashSet<int> rotationFixSet = new HashSet<int>();
         private string fullMapPath;
+
+        private void Start()
+        {
+            if (loadOnStart)
+            {
+                LoadMap();
+            }
+        }
 
         /// <summary>
         /// Загрузить карту из указанной папки
@@ -305,6 +316,9 @@ namespace MapLoader
             int spawnedCount = 0;
             int skippedCount = 0;
             
+            // Кеш загруженных моделей: GLB грузится один раз на тип здания, а не на каждый спавн-поинт
+            Dictionary<int, GameObject> loadedPrefabs = new();
+
             Debug.Log($"Начало спавна {allSpawnPoints.Count} объектов из спавн-поинтов...");
 
             // Спавним для каждого спавн-поинта
@@ -327,16 +341,20 @@ namespace MapLoader
 
                 string glbPath = buildingPaths[objId];
 
-                // Загружаем модель
-                GameObject prefab = Importer.LoadFromFile(glbPath);
-
-                if (prefab == null)
+                // Загружаем модель один раз на тип здания и переиспользуем
+                if (!loadedPrefabs.TryGetValue(objId, out GameObject prefab))
                 {
-                    Debug.LogError($"Не удалось загрузить GLB: {glbPath}");
-                    continue;
-                }
+                    prefab = Importer.LoadFromFile(glbPath);
 
-                prefab.name = Path.GetFileNameWithoutExtension(glbPath);
+                    if (prefab == null)
+                    {
+                        Debug.LogError($"Не удалось загрузить GLB: {glbPath}");
+                        continue;
+                    }
+
+                    prefab.name = Path.GetFileNameWithoutExtension(glbPath);
+                    loadedPrefabs[objId] = prefab;
+                }
 
                 // Создаём инстанс в позиции спавн-поинта
                 GameObject instance = Instantiate(prefab, objectsParent);
