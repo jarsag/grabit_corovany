@@ -1,43 +1,49 @@
-# Unity gitignore
+# ==========================================================================
+#  Unity .gitignore
+#  Цель: клон репозитория должен открываться и работать без ручных действий.
+# ==========================================================================
 
-# Generated files
-[Ll]ibrary/
-[Tt]emp/
-[Oo]bj/
-[Bb]uild/
-[Bb]uilds/
-[Ll]ogs/
-[Uu]ser[Ss]ettings/
+# --- Генерируемые Unity папки (пересоздаются автоматически) ---
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
 
-# Visual Studio cache directory
+# --- Отчёты о падениях ---
+sysinfo.txt
+crashlytics-build.properties
+
+# --- IDE и редакторы: всё это генерируется заново ---
 .vs/
+.idea/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.opensdf
+*.sdf
+*.cache
+*.ipch
+*.tlog
+*.lastbuildstate
 
-# MonoDevelop/Xamarin
-*.pidb.meta
-*.pdb.meta
-*.mdb.meta
-*.sln.meta
-*.suo.meta
-*.userprefs.meta
-
-# Unity generated files
-*.unity.meta
-*.prefab.meta
-*.scene.meta
-*.asset.meta
-*.unity
-
-# Build artifacts
-*.exe
-*.dll
-*.manifest
-*.app
-*.apk
-*.aab
-*.ipa
-*.xapk
-
-# OS generated files
+# --- ОС ---
 .DS_Store
 .DS_Store?
 ._*
@@ -47,46 +53,32 @@ ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# Unity specific
-*.unityproj
-*.cbo
-*.idb
-*.ncb
-*.opt
-*.sdf
-*.suo
-*.user
-*.VC.db
-*.VC.VC.db
-*.opensdf
-*.sdf
-*.cache
-*.ipch
-*.tlog
-*.lastbuildstate
+# --- Временные папки локальной сборки через dotnet ---
+/.dotnet_home/
+/.nuget_packages/
 
-# Plugin specific
-*[Aa]ssets/[Pp]ackages/
-*[Pp]ackages/[Ss]tyleCop/
+# ==========================================================================
+#  .meta файлы Unity ОБЯЗАНЫ быть в репозитории: в них GUID'ы ассетов.
+#  Без них Unity сгенерирует новые GUID'ы и все ссылки в сценах сломаются.
+#  Ничего из Assets/**/*.meta игнорировать нельзя.
+# ==========================================================================
+!Assets/**/*.meta
+!Assets/*.meta
 
-# Custom - Map Loader
-# Exclude map data (GLB files are too large)
-Assets/Map/**/*.glb
-Assets/Map/**/*.glb.meta
+# ==========================================================================
+#  Данные карт.
+#  В git лежит только PKmap — её использует сцена Assets/Scenes/Sandbox.unity.
+#  garner2 (91 МБ) и 07xmas2 (82 МБ) остаются локально: для обычного git это
+#  слишком много. Если понадобится их переносимость — переведём на git-lfs.
+#  ВАЖНО: эти правила идут ПОСЛЕ строк с "!", иначе исключения не сработают.
+# ==========================================================================
+/Assets/Map/garner2/**/*.glb
+/Assets/Map/garner2/**/*.glb.meta
+/Assets/Map/07xmas2/**/*.glb
+/Assets/Map/07xmas2/**/*.glb.meta
 
-# Allow specific asset files
-!Assets/*.inputactions
-!Assets/*.inputactions.meta
-!Assets/Readme.asset
-!Assets/Readme.asset.meta
-
-# Ignore auto-generated .meta files in root Assets folders
-Assets/Map.meta
-Assets/Prefabs.meta
-Assets/Scenes.meta
-Assets/Scripts.meta
-Assets/Settings.meta
-Assets/TutorialInfo.meta
-
-# Packages lock file (regenerated on each machine)
-Packages/packages-lock.json
+# ==========================================================================
+#  Локальные бэкапы сцен: лежат вне Assets, поэтому Unity их не импортирует.
+#  Удалить, когда лёгкая сцена окончательно приживётся.
+# ==========================================================================
+/_backup_scenes/
